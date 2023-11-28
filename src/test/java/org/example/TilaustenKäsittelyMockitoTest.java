@@ -59,4 +59,42 @@ public class TilaustenKäsittelyMockitoTest {
         käsittelijä.käsittele(new Tilaus(new Asiakas(100.0f), new Tuote("Tuote", 50.0f)));
         verify(hinnoittelijaMock, times(1)).lopeta();
     }
+
+    @Test
+    public void testaaKäsittelyAlle100() {
+        float alkuSaldo = 200.0f;
+        float listaHinta = 80.0f; // Hinta alle 100
+        float alennus = 10.0f; // Oletettu alennus
+        float loppuSaldo = alkuSaldo - (listaHinta * (1 - alennus / 100));
+        Asiakas asiakas = new Asiakas(alkuSaldo);
+        Tuote tuote = new Tuote("Java Basics", listaHinta);
+
+        when(hinnoittelijaMock.getAlennusProsentti(any(Asiakas.class), any(Tuote.class))).thenReturn(alennus);
+
+        TilaustenKäsittely käsittelijä = new TilaustenKäsittely();
+        käsittelijä.setHinnoittelija(hinnoittelijaMock);
+        käsittelijä.käsittele(new Tilaus(asiakas, tuote));
+
+        assertEquals(loppuSaldo, asiakas.getSaldo(), 0.001);
+        verify(hinnoittelijaMock, times(2)).getAlennusProsentti(any(Asiakas.class), any(Tuote.class));
+    }
+
+    @Test
+    public void testaaKäsittelyYliTaiYhtäSuuriKuin100() {
+        float alkuSaldo = 300.0f;
+        float listaHinta = 150.0f; // Hinta yli 100
+        float alennus = 20.0f; // Oletettu alennus
+        float loppuSaldo = alkuSaldo - (listaHinta * (1 - alennus / 100));
+        Asiakas asiakas = new Asiakas(alkuSaldo);
+        Tuote tuote = new Tuote("Advanced Java", listaHinta);
+
+        when(hinnoittelijaMock.getAlennusProsentti(any(Asiakas.class), any(Tuote.class))).thenReturn(alennus);
+
+        TilaustenKäsittely käsittelijä = new TilaustenKäsittely();
+        käsittelijä.setHinnoittelija(hinnoittelijaMock);
+        käsittelijä.käsittele(new Tilaus(asiakas, tuote));
+
+        assertEquals(loppuSaldo, asiakas.getSaldo(), 0.001);
+        verify(hinnoittelijaMock, times(2)).getAlennusProsentti(any(Asiakas.class), any(Tuote.class));
+    }
 }
